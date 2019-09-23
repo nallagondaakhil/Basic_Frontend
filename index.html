@@ -1,0 +1,186 @@
+<html>
+
+<head>
+    <title>Demo</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+
+
+</head>
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        text-align: center;
+
+    }
+</style>
+
+<body>
+
+    <div class="form-horizontal">
+        <fieldset>
+
+            <!-- Form Name -->
+            <legend>ISO TO CBS</legend>
+
+            <!-- Text input-->
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="header">Header</label>
+                <div class="col-md-4">
+                    <input id="header" name="header" type="text" placeholder="Enter Header here "
+                        class="form-control input-md">
+                </div>
+            </div>
+
+            <!-- Text input-->
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="MTI">MTI</label>
+                <div class="col-md-4">
+                    <input id="MTI" name="MTI" type="text" placeholder="Enter MTI" class="form-control input-md">
+                </div>
+            </div>
+
+
+            <!-- Text input-->
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="bitmap">BITMAP</label>
+                <div class="col-md-4">
+                    <input id="bitmap" name="bitmap" type="text" placeholder="Enter Bitmap Here"
+                        class="form-control input-md">
+                </div>
+            </div>
+
+            <!-- Text input-->
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="dataElements">Data Elements</label>
+                <div class="col-md-4">
+                    <input id="dataElements" name="dataElements" type="text" placeholder="Enter Data Elements Here"
+                        class="form-control input-md">
+                </div>
+            </div>
+
+
+            <!-- Button -->
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="generateString">Generate String</label>
+                <div class="col-md-4">
+                    <button id="generateString" name="generateString" class="btn btn-primary"
+                        onclick="generate()">Generate</button>
+                </div>
+            </div>
+
+            <!-- Textarea -->
+            <div class="form-group">
+                <label class="col-md-4 control-label" for="finalString">Final Concatenated Stiring</label>
+                <div class="col-md-4">
+                    <textarea class="form-control" id="finalString" name="finalString"></textarea>
+                </div>
+            </div>
+
+        </fieldset>
+    </div>
+    <div class="button">
+        <div class="col-md-12" style="text-align: center; line-height: 5;">
+            <label class="control-label" for="submit">Send to CBS</label>
+            <button id="submit" name="submit" class="btn btn-success" onclick="submit()">SUBMIT</button>
+            <div id="loading"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <table>
+                <tr>
+                    <th>Request</th>
+                    <th>Response</th>
+                </tr>
+                <tr>
+                    <td> <input id="request" name="request" type="text" placeholder="Request"
+                            class="form-control input-md"></td>
+                    <td> <input id="response" name="response" type="text" placeholder="Response"
+                            class="form-control input-md"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+
+
+
+<script>
+    var header;
+    var bitmap;
+    var data;
+    var mti;
+    var requeststring;
+    var date = new Date();
+    var random = Math.floor(date);
+    console.log(random);
+    function generate() {
+
+        header = document.getElementById("header").value;
+        bitmap = document.getElementById("bitmap").value;
+        data = document.getElementById("dataElements").value;
+        mti = document.getElementById("MTI").value;
+
+        bitmap = bitmap.match(/.{1,2}/g).reduce((acc, char) => acc + String.fromCharCode(parseInt(char, 16)), "");
+        console.log(bitmap);
+        requeststring = header + mti + bitmap + data;
+        var reqstrlength = requeststring.length;
+        requeststring = "0" + reqstrlength + requeststring;
+        console.log(requeststring);
+        document.getElementById("finalString").value = requeststring;
+
+    }
+
+    function submit() {
+        requeststring = document.getElementById("finalString").value;
+        console.log(requeststring);
+        document.getElementById("loading").innerHTML = "<img style='top: 45%; position: absolute; height: 100px; width: 100px;left: 45%;' src='Loading.gif' />";
+
+        // $.ajax({
+        //     url: "http://192.168.1.211:22999/cbstest/update",
+        //     dataType: "json",
+        //     type: "POST",
+        //     data: JSON.stringify({ "Request": "requeststring", "requestid": "random" }),
+        //     contentType: "application/json; charset=utf-8",
+        //     success: function (data) {
+        //         alert(data.d);
+        //     },
+        //     error: function (d) {
+        //         alert("error");
+        //     }
+        // });
+
+        $.ajax({
+            url: 'http://192.168.1.211:22999/cbstest/update',
+            type: 'POST',
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: requeststring,
+            //Set your timeout value in milliseconds or 0 for unlimited
+            success: function (data) {
+                console.log("donedonedonedonedonedoend");
+                console.log((JSON.stringify(data)) + (JSON.stringify(jqXHR)) + textStatus);
+
+                document.getElementById("request").innerHTML = requeststring;
+                document.getElementById("response").innerHTML = data;
+                document.getElementById("loading").innerHTML = "";
+            },
+            error: function () {
+                document.getElementById("loading").innerHTML = "";
+                if (textStatus === "timeout") {
+                    alert("Call has timed out");
+                } else {
+                    alert("Another error was returned" + (JSON.stringify(jqXHR)) + textStatus + errorThrown);
+                }
+            }
+        });
+
+    }
+
+</script>
+
+</html>
